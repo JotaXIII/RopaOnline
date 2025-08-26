@@ -16,38 +16,19 @@ public class Producto {
     private final String temporada;
     private final double precio;
 
-    // Constructor directo
     public Producto(String sku, String nombre, String categoria, String subcategoria,
                     String grupoEdad, String talla, String color, String temporada, double precio) {
-        this.sku = Objects.requireNonNull(sku);
-        this.nombre = Objects.requireNonNull(nombre);
-        this.categoria = Objects.requireNonNull(categoria);
-        this.subcategoria = Objects.requireNonNull(subcategoria);
-        this.grupoEdad = Objects.requireNonNull(grupoEdad);
-        this.talla = Objects.requireNonNull(talla);
-        this.color = Objects.requireNonNull(color);
-        this.temporada = Objects.requireNonNull(temporada);
+        this.sku = Objects.requireNonNull(sku, "sku");
+        this.nombre = Objects.requireNonNull(nombre, "nombre");
+        this.categoria = Objects.requireNonNull(categoria, "categoria");
+        this.subcategoria = Objects.requireNonNull(subcategoria, "subcategoria");
+        this.grupoEdad = Objects.requireNonNull(grupoEdad, "grupoEdad");
+        this.talla = Objects.requireNonNull(talla, "talla");
+        this.color = Objects.requireNonNull(color, "color");
+        this.temporada = Objects.requireNonNull(temporada, "temporada");
         this.precio = precio;
     }
 
-    // Crea un Producto (CSV)
-    public static Producto desdeMapa(Map<String, String> fila) {
-        String sku = fila.getOrDefault("sku", "").trim();
-        String nombre = fila.getOrDefault("nombre", "").trim();
-        String categoria = fila.getOrDefault("categoria", "").trim();
-        String subcategoria = fila.getOrDefault("subcategoria", "").trim();
-        String grupoEdad = fila.getOrDefault("grupo_edad", "").trim();
-        String talla = fila.getOrDefault("talla", "").trim();
-        String color = fila.getOrDefault("color", "").trim();
-        String temporada = fila.getOrDefault("temporada", "").trim();
-        String precioStr = fila.getOrDefault("precio", "0").trim();
-        double precio = Double.parseDouble(precioStr); // acá confiamos en que viene número
-
-        return new Producto(sku, nombre, categoria, subcategoria, grupoEdad, talla, color, temporada, precio);
-    }
-
-
-    // Getters
     public String getSku() { return sku; }
     public String getNombre() { return nombre; }
     public String getCategoria() { return categoria; }
@@ -58,21 +39,31 @@ public class Producto {
     public String getTemporada() { return temporada; }
     public double getPrecio() { return precio; }
 
-    @Override
-    public String toString() {
-        return sku + " - " + nombre + " (" + categoria + "/" + subcategoria + ") $" + precio;
+    public static Producto desdeMapa(Map<String, String> fila) {
+        String sku = trimSafe(fila.get("sku"));
+        String nombre = trimSafe(fila.get("nombre"));
+        String categoria = trimSafe(fila.get("categoria"));
+        String subcategoria = trimSafe(fila.get("subcategoria"));
+        String grupoEdad = trimSafe(fila.get("grupo_edad"));
+        String talla = trimSafe(fila.get("talla"));
+        String color = trimSafe(fila.get("color"));
+        String temporada = trimSafe(fila.get("temporada"));
+
+        double precio = 0.0;
+        String precioStr = trimSafe(fila.get("precio"));
+        if (!precioStr.isEmpty()) {
+            try { precio = Double.parseDouble(precioStr); }
+            catch (NumberFormatException e) { precio = 0.0; }
+        }
+        return new Producto(sku, nombre, categoria, subcategoria, grupoEdad, talla, color, temporada, precio);
     }
 
-    @Override
-    public boolean equals(Object o) {
+    private static String trimSafe(String v) { return v == null ? "" : v.trim(); }
+
+    @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Producto)) return false;
-        Producto that = (Producto) o;
-        return sku.equals(that.sku);
+        return sku.equals(((Producto) o).sku);
     }
-
-    @Override
-    public int hashCode() {
-        return sku.hashCode();
-    }
+    @Override public int hashCode() { return sku.hashCode(); }
 }

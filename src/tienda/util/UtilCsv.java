@@ -4,49 +4,70 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class UtilCsv {
 
     private UtilCsv() { }
 
-    // Lectura archivo CSV y muestra lista de productos
+    // Lee un CSV simple (UTF-8)
+    // Usa la primera línea como cabecera y devuelve una lista de mapas
     public static List<Map<String, String>> leerCsvComoMapas(InputStream in) {
+        List<Map<String, String>> filas = new ArrayList<>();
+        if (in == null) {
+            return filas;
+        }
+
         try (BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
-
-            // cabecera con los nombres
-            String cabecera = br.readLine();
-            if (cabecera == null) return Collections.emptyList();
-
-            String[] columnas = partir(cabecera);
-            List<Map<String, String>> filas = new ArrayList<>();
-
-            // Recorremos el resto de líneas y armamos cada fila como mapa
-            String linea;
-            while ((linea = br.readLine()) != null) {
-                if (linea.isBlank()) continue;
-
-                String[] valores = partir(linea);
-                // LinkedHashMap para mantener el orden de las columnas
-                Map<String, String> fila = new LinkedHashMap<>();
-
-                for (int i = 0; i < columnas.length; i++) {
-                    String key = columnas[i].trim();
-                    String val = (i < valores.length) ? valores[i].trim() : "";
-                    fila.put(key, val);
-                }
-                filas.add(fila);
+            // Lee cabecera
+            String headerLine = br.readLine();
+            if (headerLine == null) {
+                return filas;
             }
 
-            return filas;
+            // Separa columnas por coma
+            String[] cabeceras = headerLine.split(",", -1);
 
+            if (cabeceras.length > 0 && cabeceras[0] != null) {
+                cabeceras[0] = quitarBom(cabeceras[0]);
+            }
+
+            for (int i = 0; i < cabeceras.length; i++) {
+                cabeceras[i] = trimSafe(cabeceras[i]);
+            }
+
+
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                // Separa por coma manteniendo vacíos
+                String[] valores = linea.split(",", -1);
+                Map<String, String> mapa = new LinkedHashMap<>();
+                for (int i = 0; i < cabeceras.length; i++) {
+                    String key = cabeceras[i];
+                    String val = (i < valores.length) ? trimSafe(valores[i]) : "";
+                    mapa.put(key, val);
+                }
+                filas.add(mapa);
+            }
         } catch (Exception e) {
 
-            throw new RuntimeException("Error leyendo CSV: " + e.getMessage(), e);
         }
+        return filas;
     }
 
-    private static String[] partir(String linea) {
-        return linea.split(",", -1);
+
+    private static String quitarBom(String s) {
+        if (s != null && !s.isEmpty() && s.charAt(0) == '\uFEFF') {
+            return s.substring(1);
+        }
+        return s;
+    }
+
+    // nulos y espacios
+    private static String trimSafe(String v) {
+        return v == null ? "" : v.trim();
     }
 }

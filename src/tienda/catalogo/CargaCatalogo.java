@@ -17,43 +17,34 @@ public final class CargaCatalogo {
 
     private CargaCatalogo() { }
 
-    // Se establecen 2 posibles rutas para la carga del CSV
+    // Carga tienda_catalogo.csv desde rutas conocidas
     public static List<Producto> cargarPorDefecto() {
-        // Primero intentamos leerlo desde la primera opción
+        // Primer intento
         try (InputStream in = CargaCatalogo.class.getResourceAsStream(RUTA_RECURSO)) {
             if (in != null) {
                 return parsear(in);
             }
-        } catch (Exception ignored) {
-
+        } catch (Exception e) {
+            // sigue con rutas locales
         }
 
-        // Opción 2
-        String[] posibles = {
-                "src/main/recursos/catalogo/tienda_catalogo.csv",
-
-        };
-
-        for (String ruta : posibles) {
-            try {
-                Path path = Path.of(ruta);
-                if (Files.exists(path)) {
-                    try (InputStream in = new FileInputStream(path.toFile())) {
-                        return parsear(in);
-                    }
-                }
-            } catch (Exception ignored) {
-                // si una ruta falla, probamos la siguiente
+        // Luego intenta desde la carpeta del proyecto
+        Path rutaLocal = Path.of("src", "catalogo", "tienda_catalogo.csv");
+        if (Files.exists(rutaLocal)) {
+            try (InputStream in = new FileInputStream(rutaLocal.toFile())) {
+                return parsear(in);
+            } catch (Exception e) {
+                throw new RuntimeException("Error cargando catálogo desde ruta local: " + e.getMessage(), e);
             }
         }
 
-        // Si no se encuentra el archivo en ningún lado
-        throw new RuntimeException("Error cargando catálogo: no se encontró " + RUTA_RECURSO);
+        // Si no lo encuentra en ninguna ruta
+        return List.of();
     }
 
     // Convierte el CSV en una lista de objetos Producto
     private static List<Producto> parsear(InputStream in) {
-        // Leectura del CSV
+        // Lectura del CSV
         List<Map<String, String>> filas = UtilCsv.leerCsvComoMapas(in);
 
         // Lista final de productos

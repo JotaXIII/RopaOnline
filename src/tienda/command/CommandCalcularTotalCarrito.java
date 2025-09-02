@@ -1,7 +1,9 @@
 package tienda.command;
 
+import tienda.model.Carrito;
+
 // Concrete Command
-// Calcula el total del carrito sumando los precios actuales.
+// Calcula el total del carrito
 public class CommandCalcularTotalCarrito implements Command {
 
     private final Carrito carrito;  // receiver

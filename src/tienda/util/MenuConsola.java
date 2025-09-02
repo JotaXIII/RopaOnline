@@ -1,125 +1,51 @@
 package tienda.util;
 
-import tienda.catalogo.Producto;
-import tienda.command.Carrito;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
 
 public final class MenuConsola {
 
     private MenuConsola() { }
 
-    // Imprime el catálogo enumerado
-    public static void imprimirCatalogo(List<Producto> catalogo) {
-        System.out.println("=== Catálogo ===");
-        for (int i = 0; i < catalogo.size(); i++) {
-            Producto pr = catalogo.get(i);
-            System.out.printf("%2d) %s | %s | $%.0f | %s | %s%n",
-                    (i + 1), pr.getSku(), pr.getNombre(), pr.getPrecio(),
-                    pr.getGrupoEdad(), pr.getTemporada());
+    // Lee entero simple
+    public static int leerEntero(String prompt) {
+        if (prompt != null && !prompt.isBlank()) {
+            System.out.print(prompt);
         }
+        Scanner sc = new Scanner(System.in);
+        String s = sc.nextLine().trim();
+        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return -1; }
     }
 
-    // Resumen del carrito
-    public static void imprimirResumenCarrito(Carrito carrito) {
-        System.out.println("--- Resumen del carrito ---");
-        System.out.println("Líneas: " + carrito.getLineas().size());
-        for (int i = 0; i < carrito.getLineas().size(); i++) {
-            Producto p = carrito.getLineas().get(i);
-            double actual = carrito.getPrecioLinea(i);
-            System.out.printf(" - %s | %s | $%.0f%n", p.getSku(), p.getNombre(), actual);
-        }
-        System.out.printf("Total: $%.0f%n", carrito.getTotal());
-    }
-
-    // Menú principal
-    public static void imprimirMenuPrincipal() {
-        System.out.println();
-        System.out.println("=== Menú Principal ===");
-        System.out.println("1) Agregar producto al carrito");
-        System.out.println("2) Eliminar producto del carrito");
-        System.out.println("3) Ver carrito");
-        System.out.println("0) Salir");
-        System.out.print("Opción: ");
-    }
-
-    // Submenú carrito
-    public static void imprimirSubmenuCarrito() {
-        System.out.println();
-        System.out.println("=== Carrito: Descuentos ===");
-        System.out.println("1) Aplicar descuentos");
-        System.out.println("2) Calcular total del carrito");
-        System.out.println("0) Volver");
-        System.out.print("Opción: ");
-    }
-
-    // selección numérica
-    public static int leerOpcion(Scanner sc, int min, int max) {
-        while (true) {
-            String s = sc.nextLine().trim();
-            if (s.matches("\\d+")) {
-                int op = Integer.parseInt(s);
-                if (op >= min && op <= max) {
-                    return op;
-                }
-            }
-            System.out.print("Opción inválida. Intenta nuevamente: ");
-        }
-    }
-
-    // Selección de producto por número o SKU
-    public static Producto leerSeleccionProducto(Scanner sc, List<Producto> catalogo) {
-        System.out.print("Ingresa número o SKU: ");
-        String sel = sc.nextLine().trim();
-
-        if (sel.matches("\\d+")) {
-            int idx = Integer.parseInt(sel) - 1;
-            if (idx >= 0 && idx < catalogo.size()) {
-                return catalogo.get(idx);
-            }
-        } else {
-            String skuBuscado = sel.toUpperCase(Locale.ROOT);
-            for (Producto pr : catalogo) {
-                if (pr.getSku().equalsIgnoreCase(skuBuscado)) {
-                    return pr;
-                }
-            }
-        }
-        return null;
-    }
-
-    // Imprime carrito
-    public static void imprimirLineasCarrito(Carrito carrito) {
-        System.out.println("=== Carrito ===");
-        if (carrito.getLineas().isEmpty()) {
-            System.out.println("(vacío)");
+    // Muestra opciones enumeradas
+    public static void imprimirOpciones(List<String> opciones, String titulo) {
+        if (titulo != null && !titulo.isBlank()) System.out.println(titulo);
+        if (opciones == null || opciones.isEmpty()) {
+            System.out.println("sin opciones");
             return;
         }
-        for (int i = 0; i < carrito.getLineas().size(); i++) {
-            Producto p = carrito.getLineas().get(i);
-            double actual = carrito.getPrecioLinea(i);
-            System.out.printf("%2d) %s | %s | $%.0f%n",
-                    (i + 1), p.getSku(), p.getNombre(), actual);
+        for (int i = 0; i < opciones.size(); i++) {
+            System.out.printf(" %d) %s%n", i + 1, opciones.get(i));
         }
     }
 
-    // Selección de línea por número o SKU
-    public static int leerSeleccionLineaCarrito(Scanner sc, Carrito carrito) {
-        System.out.print("Ingresa número o SKU del producto: ");
-        String sel = sc.nextLine().trim();
-
-        if (sel.matches("\\d+")) {
-            return Integer.parseInt(sel);
-        } else {
-            String skuBuscado = sel.toUpperCase(Locale.ROOT);
-            for (int i = 0; i < carrito.getLineas().size(); i++) {
-                if (carrito.getLineas().get(i).getSku().equalsIgnoreCase(skuBuscado)) {
-                    return i + 1; // 1-based
-                }
-            }
-        }
+    public static int elegirOpcion(int totalOpciones, String prompt) {
+        int op = leerEntero(prompt == null ? "Opción: " : prompt);
+        if (op >= 1 && op <= totalOpciones) return op;
         return -1;
+    }
+
+    public static int elegirDeLista(List<String> opciones, String titulo, String prompt) {
+        imprimirOpciones(opciones, titulo);
+        return elegirOpcion(opciones == null ? 0 : opciones.size(), prompt);
+    }
+
+    // Convierte objetos a lista de strings
+    public static <T> List<String> mapear(List<T> datos, java.util.function.Function<T, String> fn) {
+        List<String> out = new ArrayList<>();
+        if (datos == null) return out;
+        for (T t : datos) out.add(fn.apply(t));
+        return out;
     }
 }

@@ -1,8 +1,9 @@
 package tienda.command;
 
-import tienda.catalogo.Producto;
+import tienda.model.Carrito;
+import tienda.model.Producto;
 
-// Concrete Command: agrega una línea al carrito.
+// Concrete Command agrega una línea al carrito.
 public class CommandAgregarProducto implements Command {
 
     private final Carrito carrito;

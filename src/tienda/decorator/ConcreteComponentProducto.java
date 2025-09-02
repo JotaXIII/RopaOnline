@@ -1,10 +1,10 @@
 package tienda.decorator;
 
-import tienda.catalogo.Producto;
+import tienda.model.Producto;
 
 public class ConcreteComponentProducto implements Component {
 
-    // Punto de partida: fija el precio base en el contexto.
+    // Punto de partida: fija el precio base
     private final Producto producto;
 
     public ConcreteComponentProducto(Producto producto) {
@@ -13,7 +13,8 @@ public class ConcreteComponentProducto implements Component {
 
     @Override
     public void operacion(PrecioContexto ctx) {
-        // Asegura que parta del precio base del producto.
+        if (ctx == null) return;
+
         ctx.precio = producto.getPrecio();
     }
 }

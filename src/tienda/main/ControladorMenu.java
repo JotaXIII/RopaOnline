@@ -1,132 +1,190 @@
 package tienda.main;
 
-import tienda.catalogo.Producto;
-import tienda.descuento.DiscountManager;
+import tienda.controller.ProductoController;
+import tienda.controller.CarritoController;
+import tienda.controller.DescuentoController;
+import tienda.controller.PedidoController;
 import tienda.util.MenuConsola;
-
-// Command
-import tienda.command.Carrito;
-import tienda.command.Invoker;
-import tienda.command.CommandAplicarDescuentosLinea;          // agrega producto aplicando Decorator
-import tienda.command.CommandEliminarProducto;               // elimina línea por índice
-import tienda.command.CommandCalcularTotalCarrito;           // recalcula total
-import tienda.command.CommandAplicarDescuentoLineaCarrito;   // aplica Decorator a línea del carrito
-
-import java.util.List;
 import java.util.Scanner;
 
 public class ControladorMenu {
 
+    // controladores (MVC)
+    private final ProductoController productoController;
+    private final CarritoController carritoController;
+    private final DescuentoController descuentoController;
+    private final PedidoController pedidoController;
 
-    private final List<Producto> catalogo;
-    private final DiscountManager dm;
-    private final Carrito carrito = new Carrito();
-    private final Invoker invoker = new Invoker();
+    // consola
     private final Scanner sc = new Scanner(System.in);
 
-    public ControladorMenu(List<Producto> catalogo, DiscountManager dm) {
-        this.catalogo = catalogo;
-        this.dm = dm;
+    public ControladorMenu(ProductoController productoController,
+                           CarritoController carritoController,
+                           DescuentoController descuentoController,
+                           PedidoController pedidoController) {
+        this.productoController = productoController;
+        this.carritoController = carritoController;
+        this.descuentoController = descuentoController;
+        this.pedidoController = pedidoController;
     }
 
-    // Bucle principal del menú
+    // loop principal del menú
     public void iniciar() {
         boolean seguir = true;
         while (seguir) {
-            // Catálogo + resumen siempre visibles
-            MenuConsola.imprimirCatalogo(catalogo);
-            MenuConsola.imprimirResumenCarrito(carrito); // lista todas las líneas con precio actual y el total
-            MenuConsola.imprimirMenuPrincipal();
+            System.out.println("=== Menú Principal ===");
+            System.out.println("1) Catálogo");
+            System.out.println("2) Carrito");
+            System.out.println("3) Descuentos");
+            System.out.println("4) Cerrar compra");
+            System.out.println("0) Salir");
+            System.out.print("Opción: ");
 
-            int op = MenuConsola.leerOpcion(sc, 0, 3);
+            int op = leerEnteroSeguro();
             switch (op) {
-                case 1: agregarProducto(); break;
-                case 2: eliminarProducto(); break;
-                case 3: verCarritoYDescuentos(); break;
+                case 1:
+                    menuCatalogo();
+                    break;
+                case 2:
+                    menuCarrito();
+                    break;
+                case 3:
+                    menuDescuentos();
+                    break;
+                case 4:
+                    menuCheckout();
+                    break;
                 case 0:
                     seguir = false;
-                    System.out.println("Saliendo...");
                     break;
+                default:
+                    System.out.println("Opción inválida.");
             }
+            System.out.println();
         }
+        System.out.println("Hasta luego.");
     }
 
-    // Opción 1: agregar producto al carrito
-    private void agregarProducto() {
-        Producto seleccionado = MenuConsola.leerSeleccionProducto(sc, catalogo);
-        if (seleccionado == null) {
-            System.out.println("No se seleccionó producto.");
-            return;
-        }
-        // Agrega la línea aplicando la cadena de Decorator y fijando el precio con descuento
-        invoker.agregarComando(new CommandAplicarDescuentosLinea(carrito, seleccionado));
-        invoker.agregarComando(new CommandCalcularTotalCarrito(carrito));
-        invoker.ejecutarComandos();
-
-        System.out.println("Producto agregado al carrito.");
-    }
-
-    // Opción 2: eliminar producto del carrito
-    private void eliminarProducto() {
-        if (carrito.getLineas().isEmpty()) {
-            System.out.println("El carrito está vacío.");
-            return;
-        }
-        MenuConsola.imprimirLineasCarrito(carrito);
-        int indice = MenuConsola.leerSeleccionLineaCarrito(sc, carrito);
-        if (indice <= 0 || indice > carrito.getLineas().size()) {
-            System.out.println("Selección inválida.");
-            return;
-        }
-
-        invoker.agregarComando(new CommandEliminarProducto(carrito, indice)); // índice 1-based
-        invoker.agregarComando(new CommandCalcularTotalCarrito(carrito));     // refresca el total
-        invoker.ejecutarComandos();
-
-        System.out.println("Producto eliminado del carrito.");
-    }
-
-    // Opción 3: ver carrito
-    private void verCarritoYDescuentos() {
+    // submenú de catálogo
+    private void menuCatalogo() {
         boolean volver = false;
         while (!volver) {
+            System.out.println("=== Catálogo ===");
+            System.out.println("1) Ver catálogo");
+            System.out.println("2) Agregar producto al carrito");
+            System.out.println("0) Volver");
+            System.out.print("Opción: ");
 
-            MenuConsola.imprimirLineasCarrito(carrito);
-            MenuConsola.imprimirSubmenuCarrito();
-
-            int op = MenuConsola.leerOpcion(sc, 0, 2);
+            int op = leerEnteroSeguro();
             switch (op) {
-                case 1: aplicarDescuentosALinea(); break;
-                case 2: calcularTotalConCommand(); break;
-                case 0: volver = true; break;
+                case 1:
+                    // muestra productos
+                    productoController.interactuarVerCatalogo();
+                    break;
+                case 2:
+                    // agregar al carrito
+                    productoController.interactuarAgregarProductoAlCarrito(carritoController);
+                    break;
+                case 0:
+                    volver = true;
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
             }
+            System.out.println();
         }
     }
 
-    // aplica Decorator sobre una línea del carrito mediante Command y actualiza el total
-    private void aplicarDescuentosALinea() {
-        if (carrito.getLineas().isEmpty()) {
-            System.out.println("El carrito está vacío.");
-            return;
-        }
-        MenuConsola.imprimirLineasCarrito(carrito);
-        int indice = MenuConsola.leerSeleccionLineaCarrito(sc, carrito);
-        if (indice <= 0 || indice > carrito.getLineas().size()) {
-            System.out.println("Selección inválida.");
-            return;
-        }
+    // submenú de carrito
+    private void menuCarrito() {
+        boolean volver = false;
+        while (!volver) {
+            System.out.println("=== Carrito ===");
+            System.out.println("1) Ver carrito y total");
+            System.out.println("2) Eliminar producto del carrito");
+            System.out.println("0) Volver");
+            System.out.print("Opción: ");
 
-        invoker.agregarComando(new CommandAplicarDescuentoLineaCarrito(carrito, indice));
-        invoker.agregarComando(new CommandCalcularTotalCarrito(carrito)); // refresca el total
-        invoker.ejecutarComandos();
-
-        System.out.println("Descuento aplicado.");
+            int op = leerEnteroSeguro();
+            switch (op) {
+                case 1:
+                    // muestra el carrito
+                    carritoController.interactuarVerCarrito();
+                    break;
+                case 2:
+                    // eliminar del carrito
+                    carritoController.interactuarEliminarProducto();
+                    break;
+                case 0:
+                    volver = true;
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+            System.out.println(); // espacio
+        }
     }
 
-    // calcular total del carrito mediante Command
-    private void calcularTotalConCommand() {
-        invoker.agregarComando(new CommandCalcularTotalCarrito(carrito));
-        invoker.ejecutarComandos();
-        System.out.printf("Total del carrito: $%.0f%n", carrito.getTotal());
+    // submenú de descuentos
+    private void menuDescuentos() {
+        boolean volver = false;
+        while (!volver) {
+            System.out.println("=== Descuentos ===");
+            System.out.println("1) Aplicar descuento");
+            System.out.println("0) Volver");
+            System.out.print("Opción: ");
+
+            int op = leerEnteroSeguro();
+            switch (op) {
+                case 1:
+                    descuentoController.interactuarAplicarDescuentoALinea(carritoController);
+                    break;
+                case 0:
+                    volver = true;
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+            System.out.println();
+        }
+    }
+
+    // submenú de checkout
+    private void menuCheckout() {
+        boolean volver = false;
+        while (!volver) {
+            System.out.println("=== Cerrar compra ===");
+            System.out.println("1) Ver resumen del pedido");
+            System.out.println("2) Confirmar pedido");
+            System.out.println("0) Volver");
+            System.out.print("Opción: ");
+
+            int op = leerEnteroSeguro();
+            switch (op) {
+                case 1:
+                    // muestra resumen
+                    pedidoController.interactuarVerResumen();
+                    break;
+                case 2:
+                    // valida, recalcula, mantiene precios y crea el pedido
+                    pedidoController.interactuarConfirmarPedido();
+                    break;
+                case 0:
+                    volver = true;
+                    break;
+                default:
+                    System.out.println("Opción inválida.");
+            }
+            System.out.println();
+        }
+    }
+
+    private int leerEnteroSeguro() {
+        String s = sc.nextLine().trim();
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 }

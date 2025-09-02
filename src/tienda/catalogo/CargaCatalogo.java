@@ -1,7 +1,7 @@
 package tienda.catalogo;
 
+import tienda.model.Producto;
 import tienda.util.UtilCsv;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -17,29 +17,29 @@ public final class CargaCatalogo {
 
     private CargaCatalogo() { }
 
-    // Carga tienda_catalogo.csv desde rutas conocidas
+    // Carga por defecto
     public static List<Producto> cargarPorDefecto() {
-        // Primer intento
+
         try (InputStream in = CargaCatalogo.class.getResourceAsStream(RUTA_RECURSO)) {
             if (in != null) {
                 return parsear(in);
             }
-        } catch (Exception e) {
-            // sigue con rutas locales
-        }
+        } catch (Exception ignore) { }
 
-        // Luego intenta desde la carpeta del proyecto
-        Path rutaLocal = Path.of("src", "catalogo", "tienda_catalogo.csv");
-        if (Files.exists(rutaLocal)) {
-            try (InputStream in = new FileInputStream(rutaLocal.toFile())) {
-                return parsear(in);
-            } catch (Exception e) {
-                throw new RuntimeException("Error cargando catálogo desde ruta local: " + e.getMessage(), e);
+        Path[] candidatos = new Path[] {
+                Path.of("src", "tienda", "catalogo", "tienda_catalogo.csv"),
+                Path.of("RopaOnline", "src", "tienda", "catalogo", "tienda_catalogo.csv")
+        };
+
+        for (Path p : candidatos) {
+            if (Files.exists(p)) {
+                try (InputStream in = new FileInputStream(p.toFile())) {
+                    return parsear(in);
+                } catch (Exception ignore) { }
             }
         }
 
-        // Si no lo encuentra en ninguna ruta
-        return List.of();
+        return new ArrayList<>();
     }
 
     // Convierte el CSV en una lista de objetos Producto

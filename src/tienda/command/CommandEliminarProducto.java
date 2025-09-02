@@ -1,6 +1,8 @@
 package tienda.command;
 
-// Concrete Command: elimina una línea del carrito por índice
+import tienda.model.Carrito;
+
+// Concrete Command elimina del carrito
 public class CommandEliminarProducto implements Command {
 
     private final Carrito carrito;

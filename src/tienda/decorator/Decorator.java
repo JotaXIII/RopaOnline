@@ -1,7 +1,6 @@
 package tienda.decorator;
 
-// Clase abstracta del patrón Decorator
-
+// Clase abstracta Decorator
 public abstract class Decorator implements Component {
 
     protected final Component componente;
@@ -12,8 +11,10 @@ public abstract class Decorator implements Component {
 
     @Override
     public void operacion(PrecioContexto ctx) {
+
         if (componente != null) {
             componente.operacion(ctx);
         }
+
     }
 }

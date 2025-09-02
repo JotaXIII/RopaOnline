@@ -1,6 +1,4 @@
-package tienda.command;
-
-import tienda.catalogo.Producto;
+package tienda.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +13,18 @@ public class Carrito {
 
     private double total = 0.0;
 
-    // Contexto usado por los comandos
-    String modo = "";
-    Producto producto = null;
-    Integer indiceEliminar = null;
-    String skuEliminar = null;
+    // Entradas temporales de los Command
+    public String modo = "";
+    public Producto producto = null;
+    public Integer indiceEliminar = null;
+    public String skuEliminar = null;
 
+    // Ejecuta la acción
     public void accion() {
         if ("APLICAR_LINEA".equals(modo)) {
             if (producto != null) {
                 lineas.add(producto);
-                precios.add(producto.getPrecio()); // inicia con precio base
+                precios.add(producto.getPrecio()); // precio base al inicio
             }
             producto = null;
             modo = "";
@@ -56,15 +55,15 @@ public class Carrito {
 
         if ("CALCULAR_TOTAL".equals(modo)) {
             double suma = 0.0;
-            for (double v : precios) {
-                suma += v; // suma precio actual de cada línea
+            for (double p : precios) {
+                suma += p;
             }
             total = suma;
             modo = "";
         }
     }
 
-    // Setter para actualizar el precio actual
+    // fija el precio de una línea después de aplicar Decorator
     public void fijarPrecioLinea(int index1, double nuevoPrecio) {
         int idx = index1 - 1;
         if (idx >= 0 && idx < precios.size()) {
@@ -76,8 +75,19 @@ public class Carrito {
     public List<Producto> getLineas() { return lineas; }
     public double getTotal() { return total; }
 
-    // Precio actual
+    // Precio actual de una línea
     public double getPrecioLinea(int index0) {
         return (index0 >= 0 && index0 < precios.size()) ? precios.get(index0) : 0.0;
+    }
+
+    // Limpia el carrito
+    public void vaciar() {
+        lineas.clear();
+        precios.clear();
+        total = 0.0;
+        modo = "";
+        producto = null;
+        indiceEliminar = null;
+        skuEliminar = null;
     }
 }

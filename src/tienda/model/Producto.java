@@ -1,4 +1,4 @@
-package tienda.catalogo;
+package tienda.model;
 
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +29,7 @@ public class Producto {
         this.precio = precio;
     }
 
+    // getters simples
     public String getSku() { return sku; }
     public String getNombre() { return nombre; }
     public String getCategoria() { return categoria; }
@@ -39,6 +40,7 @@ public class Producto {
     public String getTemporada() { return temporada; }
     public double getPrecio() { return precio; }
 
+    // crea un producto desde un mapa
     public static Producto desdeMapa(Map<String, String> fila) {
         String sku = trimSafe(fila.get("sku"));
         String nombre = trimSafe(fila.get("nombre"));

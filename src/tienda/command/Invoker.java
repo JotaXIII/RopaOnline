@@ -5,7 +5,6 @@ import java.util.List;
 
 public class Invoker {
 
-    // Invoker del patrón Command
     // Mantiene una lista de comandos y los ejecuta en orden.
 
     private final List<Command> cola = new ArrayList<>();
